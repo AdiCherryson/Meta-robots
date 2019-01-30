@@ -86,7 +86,7 @@ function isIndexable(
   return indexable;
 }
 
-async function readLines() {
+async function processFile() {
   let browser, page;
   let robotsList, canonicalsList, jsRobotsList, jsCanonicalsList;
   let TTFB, trueTTFB;
@@ -109,7 +109,7 @@ async function readLines() {
   lr.on("line", async function(url) {
     // pause emitting of lines...
     lr.pause();
-
+    console.log('Current page:',url)
     try {
       await page.goto(url, {
         waitUntil: "domcontentloaded",
@@ -167,4 +167,4 @@ async function readLines() {
     browser.close();
   });
 }
-readLines();
+processFile();
