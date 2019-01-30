@@ -29,29 +29,66 @@ function writePeroformanceResults(stream, TTFB, trueTTFB, page) {
 }
 
 function writeTagsResults(
+  URL,
   canonicalsList,
   robotsList,
   jsCanonicalsList,
   jsRobotsList
 ) {
   if (canonicalsList.toString() == jsCanonicalsList.toString()) {
-    console.log("canonicale bez zmian");
+    console.log("JavaScript doesn't change canonical links");
   } else {
-    console.log("canonicale zmienione");
+    console.log("JavaScript changed canonical links!");
   }
   if (robotsList.toString() == jsRobotsList.toString()) {
-    console.log("meta-robots bez zmian");
+    console.log("JavaScript doesn't change meta-robots tags");
   } else {
-    console.log("meta-robots zmienione");
+    console.log("JavaScript changed meta-robots tags!");
   }
+  console.log(
+    "The page has",
+    canonicalsList.length,
+    "Canonical link(s) with the Javascript turned off, and ",
+    jsCanonicalsList.length,
+    "with JS turned ON."
+  );
+  console.log(
+    "The page has",
+    robotsList.length,
+    "meta-robots tag(s) with the Javascript turned off, and ",
+    jsRobotsList.length,
+    "with JS turned ON."
+  );
+  if (
+    isIndexable(URL, canonicalsList, robotsList, jsCanonicalsList, jsRobotsList)
+  )
+    console.log("The page is indexable");
+  else console.log("The page is not indexable");
+}
+
+function isIndexable(
+  URL,
+  canonicalsList,
+  robotsList,
+  jsCanonicalsList,
+  jsRobotsList
+) {
+  let indexable = true;
+  for (i = 0; i < canonicalsList.legth; i++) {
+    if (canonicalsList[i].toString() != URL) indexable = false;
+  }
+  for (i = 0; i < jsCanonicalsList.legth; i++) {
+    if (jsCanonicalsList[i].toString() != URL) indexable = false;
+  }
+  if (robotsList.toString().includes("noindex")) indexable = false;
+  if (jsRobotsList.toString().includes("noindex")) indexable = false;
+
+  return indexable;
 }
 
 async function readLines() {
   let browser, page;
-  let robotsList = new Array();
-  let canonicalsList = new Array();
-  let jsRobotsList = new Array();
-  let jsCanonicalsList = new Array();
+  let robotsList, canonicalsList, jsRobotsList, jsCanonicalsList;
   let TTFB, trueTTFB;
 
   const lr = new LineByLineReader(".\\Adresy.csv");
@@ -81,7 +118,7 @@ async function readLines() {
     } catch (error) {
       console.log(error, "at ", url);
     }
-
+    //Measure performance
     [TTFB, trueTTFB] = await performance.measurePerformance(page);
     //Log and write results
     writePeroformanceResults(stream, TTFB, trueTTFB, page);
@@ -96,6 +133,7 @@ async function readLines() {
     robotsList = await tags.extractRobotsTag(page);
 
     writeTagsResults(
+      url,
       canonicalsList,
       robotsList,
       jsCanonicalsList,
@@ -104,7 +142,13 @@ async function readLines() {
 
     //Restart browser (because of persistent connection for TTFB measurements)
     await browser.close();
-    [browser, page] = await initializeBrowser();
+    initializeBrowser()
+      .then(results => {
+        [browser, page] = results;
+      })
+      .catch(err => {
+        console.log("Cannot initialize browser");
+      });
 
     setTimeout(async function() {
       // ...and continue emitting lines
@@ -113,12 +157,11 @@ async function readLines() {
     }, 10000);
   });
 
-  //Error handling
+  //File reader error handling
   lr.on("error", function(err) {
     console.log(err);
   });
 
-  //End of file. Cleaning
   lr.on("end", function() {
     // All lines are read, file is closed now.
     browser.close();
