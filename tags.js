@@ -12,7 +12,6 @@ exports.extractRobotsTag = async function extractRobotsTag(page) {
   return list;
 }
 
-
 exports.extractCanonicals = async function extractCanonicals(page) {
   let xpath = await page.$x("//link[@rel='canonical']/@href");
   let list = new Array();
