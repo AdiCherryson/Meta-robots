@@ -1,5 +1,5 @@
 const puppeteer = require("puppeteer");
-
+const fs = require("fs");
 exports.initializeBrowser = function initializeBrowser() {
   return new Promise(async (resolve, reject) => {
     try {
@@ -36,4 +36,11 @@ exports.writeResults = function writeResults(stream, Metrics) {
     stream.write(" ");
   }
   stream.write("\n");
+};
+
+exports.initializeWriteStream = function initializeWriteStream() {
+  return fs.createWriteStream(".\\Czasy.txt", {
+    flags: "a",
+    encoding: "utf8"
+  });
 };

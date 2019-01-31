@@ -17,8 +17,8 @@ exports.extractCanonicals = async function extractCanonicals(page) {
   let list = new Array();
 
   for (i = 0; i < xpath.length; i++) {
-    let robotsContent = await page.evaluate(el => el.textContent, xpath[i]);
-    list.push(robotsContent);
+    let canonicalContent = await page.evaluate(el => el.textContent, xpath[i]);
+    list.push(encodeURI(canonicalContent));
   }
   return list;
 }
@@ -26,7 +26,7 @@ exports.extractCanonicals = async function extractCanonicals(page) {
 exports.isCanonicalised = function isCanonicalised(url, canonicalsList) {
   let canonicalised = false;
   for (let i = 0; i < canonicalsList.length; i++) {
-    if (canonicalsList[i].toString() != url) return true;      
+    if (canonicalsList[i].toString() != url) return true;
     else canonicalised = 'self';
   }
   return canonicalised;

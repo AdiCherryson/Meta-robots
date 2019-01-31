@@ -1,6 +1,5 @@
 "use strict";
 const LineByLineReader = require("line-by-line");
-const fs = require("fs");
 const tags = require("./tags.js");
 const performance = require("./performance.js");
 const manipulate = require("./manipulate.js");
@@ -34,26 +33,22 @@ let Metrics = {
   };
 
 async function processFile(Metrics) {
-  let browser, page;
-
-  const lr = new LineByLineReader(".\\Adresy.csv");
-  var stream = fs.createWriteStream(".\\Czasy.txt", {
-    flags: "a",
-    encoding: "utf8"
-  });
+  let browser, page, stream;
+  const lineReader = new LineByLineReader(".\\Adresy.csv");
 
   //File opened, initialize protocol
-  lr.on("open", async function(err) {
-    lr.pause();
-    stream.write("URL TTFB trueTTFB indexable(noJS) indexable(js) canonicalised(nojs) canonicalised(js) canonicaltags(nojs) canonicaltags(js) robotsTags(nojs) robotstags(js)\n");
+  lineReader.on("open", async function() {
+    lineReader.pause();
+    stream = await manipulate.initializeWriteStream();
     [browser, page] = await manipulate.initializeBrowser();
-    lr.resume();
+    stream.write("URL TTFB trueTTFB indexable(noJS) indexable(js) canonicalised(nojs) canonicalised(js) canonicaltags(nojs) canonicaltags(js) robotsTags(nojs) robotstags(js)\n");
+    lineReader.resume();
   });
 
   //New line intercepted
-  lr.on("line", async function(url) {
+  lineReader.on("line", async function(url) {
     // pause emitting of lines...
-    lr.pause();
+    lineReader.pause();
     try {
       await page.goto(url, {
         waitUntil: "domcontentloaded",
@@ -70,7 +65,7 @@ async function processFile(Metrics) {
 
     Metrics.Lists.canonicalsWithJavaScript = await tags.extractCanonicals(page);
     Metrics.numberOfTags.canonicalsWithJavaScirpt = Metrics.Lists.canonicalsWithJavaScript.length;
-    Metrics.canonicalization.withJavaScript = tags.isCanonicalised(url, Metrics.Lists.canonicalsWithJavaScript);
+    Metrics.canonicalization.withJavaScript = tags.isCanonicalised(Metrics.url, Metrics.Lists.canonicalsWithJavaScript);
 
     Metrics.Lists.robotsWithJavaScript = await tags.extractRobotsTag(page);
     Metrics.numberOfTags.robotsWithJavaScriptS = Metrics.Lists.robotsWithJavaScript.length;
@@ -82,7 +77,7 @@ async function processFile(Metrics) {
 
     Metrics.Lists.canonicalsWithoutJavaScript = await tags.extractCanonicals(page);
     Metrics.numberOfTags.canonicalsWithoutJavaScirpt = Metrics.Lists.canonicalsWithoutJavaScript.length;
-    Metrics.canonicalization.withoutJavaScript = tags.isCanonicalised(url, Metrics.Lists.canonicalsWithoutJavaScript);
+    Metrics.canonicalization.withoutJavaScript = tags.isCanonicalised(Metrics.url, Metrics.Lists.canonicalsWithoutJavaScript);
 
     Metrics.Lists.robotsWithoutJavaScript = await tags.extractRobotsTag(page);
     Metrics.numberOfTags.robotsWithoutJavaScript = Metrics.Lists.robotsWithoutJavaScript.length;
@@ -104,16 +99,16 @@ async function processFile(Metrics) {
     setTimeout(async function() {
       // ...and continue emitting lines
       console.log();
-      lr.resume();
+      lineReader.resume();
     }, 10000);
   });
 
   //File reader error handling
-  lr.on("error", function(err) {
+  lineReader.on("error", function(err) {
     console.log(err);
   });
 
-  lr.on("end", function() {
+  lineReader.on("end", function() {
     // All lines are read, file is closed now.
     browser.close();
   });
