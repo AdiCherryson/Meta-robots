@@ -23,34 +23,18 @@ exports.extractCanonicals = async function extractCanonicals(page) {
   return list;
 }
 
-// async function run() {
-//   let browser = await puppeteer.launch({ headless: true });
-//   let page = await browser.newPage();
+exports.isCanonicalised = function isCanonicalised(url, canonicalsList) {
+  let canonicalised = false;
+  for (let i = 0; i < canonicalsList.length; i++) {
+    if (canonicalsList[i].toString() != url) return true;      
+    else canonicalised = 'self';
+  }
+  return canonicalised;
+}
 
-//   // JavaScript on
-//   console.log("JavaScript on");
-//   await page.goto(URL);
-//   let list = await extractRobotsTag(page);
-//   console.log("number of meta-robots tags on page: ", list.length);
-//   console.log("Meta-robots content", ":", list);
-//   list = await extractCanonicals(page);
-//   console.log("Canonicals: ", list, "\n");
+exports.isIndexable = function isIndexable(robotsList) {
+  let indexable = true;
+  if (robotsList.toString().includes("noindex")) indexable = false;
 
-//   page.close();
-
-//   //JavaScript off
-//   page = await browser.newPage();
-//   await page.setJavaScriptEnabled(false);
-
-//   console.log("JavaScript off");
-//   await page.goto(URL);
-//   await extractRobotsTag(page);
-//   list = await extractRobotsTag(page);
-//   console.log("number of meta-robots tags on page: ", list.length);
-//   console.log("Meta-robots content", ":", list);
-//   list = await extractCanonicals(page);
-//   console.log("Canonicals: ", list, "\n");
-
-//   browser.close();
-// }
-// run();
+  return indexable;
+}
