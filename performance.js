@@ -14,11 +14,19 @@ function evaluatePerformance(page) {
   exports. measurePerformance = async function measurePerformance(page) {
     //Evaluate performance
     var perf = await evaluatePerformance(page);
-    var TTFB = JSON.stringify(
-      perf.timing.responseStart - perf.timing.requestStart
-    );
-    var trueTTFB = JSON.stringify(
-      perf.timing.responseStart - perf.timing.fetchStart
-    );
+    var TTFB =  perf.timing.responseStart - perf.timing.requestStart;
+    var trueTTFB = perf.timing.responseStart - perf.timing.fetchStart;
     return([TTFB, trueTTFB])
 }
+
+// exports. measurePerformance = async function measurePerformance(page) {
+//   //Evaluate performance
+//   var perf = await evaluatePerformance(page);
+//   var TTFB = JSON.stringify(
+//     perf.timing.responseStart - perf.timing.requestStart
+//   );
+//   var trueTTFB = JSON.stringify(
+//     perf.timing.responseStart - perf.timing.fetchStart
+//   );
+//   return([TTFB, trueTTFB])
+// }
